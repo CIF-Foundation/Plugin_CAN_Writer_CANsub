@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+import "cif_common.proto";
+//The CIF protos are installed in the default CIF data directory.  On Windows this is C:/Users/Public/Documents/CIF/protos
+//When generating new gRPC server/client code this directory needs to be provided as an Import path
+
+package cif.can_writer_cansub;
+
+service CanWriterCansub {
+  rpc GetDevices (RefreshDevices) returns (CansubDevices) {}
+  rpc GetStatistics (cif.common.Empty) returns (Statistics) {}
+  rpc SetInterfaceBlink (InterfaceBlink) returns (cif.common.Status) {}
+  rpc SendCanMessage (CanMessage) returns (cif.common.Status) {}
+  rpc GetCANStatus (GetCANStatusRequest) returns (GetCANStatusResponse) {}
+}
+
+message Statistics {
+   uint64 iterations = 1;
+   uint64 fifo_read_timeouts = 2;
+   uint64 write_frames = 3;
+   uint64 filtered_frames = 4;
+   uint64 fifo_drops = 5;
+   uint64 ack_errors = 6;
+}
+
+message RefreshDevices {
+   bool refresh_device_list = 1;
+}
+
+message InterfaceBlink {
+   bool blink = 1;
+}
+
+message CansubDevices {
+   repeated CansubDevice devices = 1;
+}
+
+message CansubDevice {
+   string interface = 1;
+   uint32 slot = 2;
+   string device_id = 3;
+}
+
+message CanMessage {
+   bytes can_message = 1; //Must be in format of pcap data linktype SocketCAN. Can be multiple messages 
+   //concatenated together.  Timestamps are ignored and it is send immediately.  
+}
+
+message GetCANStatusRequest {}
+
+message GetCANStatusResponse {
+   CommState comm_state = 1;
+   LastError last_error = 2;
+   uint32 rx_error_ctr = 3;
+   uint32 tx_error_crt = 4;
+}
+
+enum CommState {
+  COMMSTATE_ERROR_ACTIVE = 0;
+  COMMSTATE_ERROR_PASSIVE = 1;
+  COMMSTATE_BUS_OFF = 2;
+}
+
+enum LastError {
+  LASTERROR_NONE = 0;
+  LASTERROR_STUFF = 1;
+  LASTERROR_FORM = 2;
+  LASTERROR_ACK = 3;
+  LASTERROR_BIT1 = 4;
+  LASTERROR_BIT0 = 5;
+  LASTERROR_CRC = 6;
+  LASTERROR_UNKNOWN = 7;
+}
